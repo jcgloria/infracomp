@@ -45,7 +45,8 @@ public class Cliente {
 				return false;
 			}
 			else if (respuesta2.equals("OK")){
-				//se empieza thread
+				ThreadCliente cliente = new ThreadCliente(null, this);
+				
 				return true;
 			}
 			else{

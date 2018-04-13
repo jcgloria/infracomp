@@ -10,21 +10,14 @@ import java.net.Socket;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Date;
 import java.security.*;
 import javax.security.auth.x500.X500Principal;
 
-import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.x509.GeneralNames;
-import org.bouncycastle.asn1.x509.KeyPurposeId;
-import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.jcajce.provider.keystore.bc.BcKeyStoreSpi.BouncyCastleStore;
-import org.bouncycastle.jcajce.provider.symmetric.util.PBE.Util;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+
 
 public class ThreadCliente extends Thread {
 
@@ -32,7 +25,7 @@ public class ThreadCliente extends Thread {
 	private Socket socketComServidor;
 	private BufferedReader inServidor;
 	private Cliente cliente;
-	
+
 
 	public ThreadCliente( Socket nSocketComServidor, Cliente pCliente )
 	{
@@ -55,14 +48,14 @@ public class ThreadCliente extends Thread {
 					//MANDAR CERTIFICADO
 					cliente.mandarMensaje("CERTCLNT");
 					KeyPair pair = hacerKeyPair();
-					
+
 					if(pair != null){
 						X509V3CertificateGenerator  certGen = new X509V3CertificateGenerator();
 						certGen.setPublicKey(pair.getPublic());
-						
+
 						try {
 							byte[] flujoDeBytes = (certGen.generate(pair.getPrivate()).getEncoded());
-							
+
 							cliente.mandarBytes(flujoDeBytes);
 							inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
 							String mensaje2 = inServidor.readLine();
@@ -73,6 +66,22 @@ public class ThreadCliente extends Thread {
 									CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 									InputStream in = new ByteArrayInputStream(cliente.recibirCertificado());
 									X509Certificate cert = (X509Certificate) certFactory.generateCertificate(in);
+									if(cert.getPublicKey() == null){
+										cliente.mandarMensaje("ERROR");
+									}else{
+										cliente.mandarMensaje("OK");
+										inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+										String mensaje4[] = inServidor.readLine().split(":");
+										if(mensaje4[0].equals("INICIO")){
+											cliente.mandarMensaje("ACT1");
+											cliente.mandarMensaje("ACT2");
+										
+										}
+										inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+										String mensaje5 = inServidor.readLine();
+										if(mensaje5.equals("OK")) System.out.println("ESTA MONDA SIRVE");
+										
+									}
 								}
 							}
 						} catch (Exception e) {
@@ -102,6 +111,16 @@ public class ThreadCliente extends Thread {
 		} catch (NoSuchAlgorithmException e) {
 			return null;
 		}
+	}
+	
+	public String generarPosicion(){
+		String a;
+		Double decimal = Math.random()*99;
+		NumberFormat formatter = new DecimalFormat("#00.0000");
+		Integer entero = (int) Math.random()*99;
+		a=entero+" "+formatter.format(decimal);
+
+		return a;
 	}
 
 }
