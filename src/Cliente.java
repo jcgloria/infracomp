@@ -12,16 +12,20 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Provider.Service;
+import java.security.PublicKey;
 import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
@@ -44,6 +48,8 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
+import org.bouncycastle.util.encoders.Base64Encoder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
@@ -110,6 +116,7 @@ public class Cliente {
 
 
 					try {
+						X509Certificate certCliente=certGen.generate(pair.getPrivate());
 						byte[] flujoDeBytes = (certGen.generate(pair.getPrivate()).getEncoded());
 						mandarBytes(flujoDeBytes);
 						inCliente = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
@@ -127,18 +134,19 @@ public class Cliente {
 									mandarMensaje("ESTADO:OK");
 									inCliente = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 									String mensaje4[] = inCliente.readLine().split(":");
-									if(mensaje4[0].equals("INICIO")){
-										System.out.println(mensaje4[1]);
-										System.out.println(pair.getPrivate().toString());
-										//String msg=desencriptar(pair.getPrivate(), convertHexToString(mensaje4[1]));
-										//System.out.println("MENSAJE DECRIPTADO :"+msg);
-										mandarMensaje("ACT1");
+									if(mensaje4[0].equals("INICIO")) {
+									
+										String msg=decrypt(pair.getPrivate(), convertHexToString(mensaje4[1])).toString();
+										System.out.println(msg);
+										System.out.println(encrypt1(decrypt(pair.getPrivate(), convertHexToString(mensaje4[1])), generarPosicion()));
+										
+										mandarMensaje("ACT1:");
 										mandarMensaje("ACT2");
 
 									}
 									inCliente = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 									String mensaje5 = inCliente.readLine();
-									if(mensaje5.equals("OK")) System.out.println("ESTA MONDA SIRVE");
+									if(mensaje5.equals("ESTADO:OK")) System.out.println("ESTA MONDA SIRVE");
 
 								}
 							}
@@ -193,7 +201,7 @@ public class Cliente {
 	public static void main(String[] args) {
 		Cliente c = new Cliente(8080);
 		try{
-			c.conectarServidor("BLOWFISH", "RSA", "HMACMD5");
+			c.conectarServidor("AES", "RSA", "HMACMD5");
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -264,6 +272,33 @@ public class Cliente {
 		return sb.toString();
 	}
 
+
+
+	public static byte[] decrypt(PrivateKey privateKey, String encrypted) throws Exception {
+		
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+		Cipher cipher = Cipher.getInstance("RSA","BC");  
+		cipher.init(Cipher.DECRYPT_MODE, privateKey);
+		return cipher.doFinal(encrypted.getBytes());
+	}
+
+	public String encrypt1(byte[] key,String value) {
+
+		try{
+			SecretKeySpec skeySpec = new SecretKeySpec(key,"AES");
+			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+			cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
+			byte[] encrypted = cipher.doFinal(value.getBytes());
+			return encrypted.toString();
+		}catch(Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+
+
+	}
+	
+	
 
 }
 
