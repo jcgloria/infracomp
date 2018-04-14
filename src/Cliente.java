@@ -35,6 +35,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -127,7 +128,9 @@ public class Cliente {
 									inCliente = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 									String mensaje4[] = inCliente.readLine().split(":");
 									if(mensaje4[0].equals("INICIO")){
-										System.out.println(mensaje4[1]);   
+										System.out.println(mensaje4[1]);
+										System.out.println(pair.getPrivate().toString());
+										//String msg=desencriptar(pair.getPrivate(), convertHexToString(mensaje4[1]));
 										//System.out.println("MENSAJE DECRIPTADO :"+msg);
 										mandarMensaje("ACT1");
 										mandarMensaje("ACT2");
@@ -162,17 +165,6 @@ public class Cliente {
 				return false;
 			}
 		}
-	}
-	
-	private static String hexToAscii(String hexStr) {
-	    StringBuilder output = new StringBuilder("");
-	     
-	    for (int i = 0; i < hexStr.length(); i += 2) {
-	        String str = hexStr.substring(i, i + 2);
-	        output.append((char) Integer.parseInt(str, 16));
-	    }
-	     
-	    return output.toString();
 	}
 
 	public void mandarMensaje(String a) {
@@ -252,73 +244,27 @@ public class Cliente {
 		return certGen.generateX509Certificate(pair.getPrivate(), "BC");
 	}
 
-	public String decrypt(String input, String key){
+	public String convertHexToString(String hex){
 
-		byte[] output = null;
+		StringBuilder sb = new StringBuilder();
+		StringBuilder temp = new StringBuilder();
 
-		try{
-			SecretKeySpec skey = new SecretKeySpec(key.getBytes(), "AES");
-			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, skey);
-			output = cipher.doFinal(parseHexStr2Byte(input));
+		for( int i=0; i<hex.length()-1; i+=2 ){
 
-		}catch(Exception e){
-			System.out.println(e.toString());
+			//grab the hex in pairs
+			String output = hex.substring(i, (i + 2));
+			//convert hex to decimal
+			int decimal = Integer.parseInt(output, 16);
+			//convert the decimal to character
+			sb.append((char)decimal);
+
+			temp.append(decimal);
 		}
-		return new String(output);
+
+		return sb.toString();
 	}
 
-	private static byte[] parseHexStr2Byte(String hexStr) {
 
-		if (hexStr.length() < 1)
-			return null;
-		byte[] result = new byte[hexStr.length()/2];
-		for (int i = 0;i< hexStr.length()/2; i++) {
-			int high = Integer.parseInt(hexStr.substring(i*2, i*2+1), 16);
-			int low = Integer.parseInt(hexStr.substring(i*2+1, i*2+2), 16);
-			result[i] = (byte) (high * 16 + low);
-		}
-		return result;
-
-	}
-	
-	public String desencriptar(Key key,String msg) throws Exception {
-	    Cipher cipher = Cipher.getInstance("RSA");
-	    cipher.init(Cipher.DECRYPT_MODE, key);
-	    return new String(cipher.doFinal(Base64.getDecoder().decode(msg)));
-	  }
-
-	  public static byte[] hexToBytes(String str) {
-	    if (str == null) {
-	      return null;
-	    } else if (str.length() < 2) {
-	      return null;
-	    } else {
-	      int len = str.length() / 2;
-	      byte[] buffer = new byte[len];
-	      for (int i = 0; i < len; i++) {
-	        buffer[i] = (byte) Integer.parseInt(str.substring(i * 2, i * 2 + 2), 16);
-	      }
-	      return buffer;
-	    }
-
-	  }
-
-	  public static String bytesToHex(byte[] data) {
-	    if (data == null) {
-	      return null;
-	    } else {
-	      int len = data.length;
-	      String str = "";
-	      for (int i = 0; i < len; i++) {
-	        if ((data[i] & 0xFF) < 16)
-	          str = str + "0" + java.lang.Integer.toHexString(data[i] & 0xFF);
-	        else
-	          str = str + java.lang.Integer.toHexString(data[i] & 0xFF);
-	      }
-	      return str.toUpperCase();
-	    }
-	  }
 }
 
 
