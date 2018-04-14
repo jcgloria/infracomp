@@ -23,7 +23,7 @@ public class ThreadCliente extends Thread {
 
 
 	private Socket socketComServidor;
-	private BufferedReader inServidor;
+	private BufferedReader inCliente;
 	private Cliente cliente;
 
 
@@ -36,15 +36,17 @@ public class ThreadCliente extends Thread {
 
 	public void run(){
 		try {
-			inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+			inCliente = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
 			boolean servidorCaido = false;
 			while(!servidorCaido){
-				String mensaje1 = inServidor.readLine( );
+				String mensaje1 = inCliente.readLine( );
 				if( mensaje1 == null )
 				{
 					servidorCaido = true;
+					System.out.println("entra al null");
 				}
 				else{
+					System.out.println("entra al else");
 					//MANDAR CERTIFICADO
 					cliente.mandarMensaje("CERTCLNT");
 					KeyPair pair = hacerKeyPair();
@@ -57,11 +59,11 @@ public class ThreadCliente extends Thread {
 							byte[] flujoDeBytes = (certGen.generate(pair.getPrivate()).getEncoded());
 
 							cliente.mandarBytes(flujoDeBytes);
-							inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
-							String mensaje2 = inServidor.readLine();
+							inCliente = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+							String mensaje2 = inCliente.readLine();
 							if(mensaje2.equals("OK")){
-								inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
-								String mensaje3 = inServidor.readLine();
+								inCliente = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+								String mensaje3 = inCliente.readLine();
 								if(mensaje3.equals("CERTSRV")){
 									CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 									InputStream in = new ByteArrayInputStream(cliente.recibirCertificado());
@@ -70,15 +72,15 @@ public class ThreadCliente extends Thread {
 										cliente.mandarMensaje("ERROR");
 									}else{
 										cliente.mandarMensaje("OK");
-										inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
-										String mensaje4[] = inServidor.readLine().split(":");
+										inCliente = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+										String mensaje4[] = inCliente.readLine().split(":");
 										if(mensaje4[0].equals("INICIO")){
 											cliente.mandarMensaje("ACT1");
 											cliente.mandarMensaje("ACT2");
 										
 										}
-										inServidor = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
-										String mensaje5 = inServidor.readLine();
+										inCliente = new BufferedReader( new InputStreamReader( socketComServidor.getInputStream( ) ) );
+										String mensaje5 = inCliente.readLine();
 										if(mensaje5.equals("OK")) System.out.println("ESTA MONDA SIRVE");
 										
 									}
