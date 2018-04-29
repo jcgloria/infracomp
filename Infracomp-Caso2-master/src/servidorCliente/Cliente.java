@@ -30,13 +30,9 @@ public class Cliente {
 			protocolo.setAlgHmac(hmac);
 			
 			protocolo.procesarCadena(in,out,printer,reader);
-	
 			
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
+			System.out.println("Transaccion perdida--------------------------------------------------------");
 			e.printStackTrace();
 		}
 	}

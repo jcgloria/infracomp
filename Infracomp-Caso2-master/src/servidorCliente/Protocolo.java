@@ -43,7 +43,7 @@ public class Protocolo {
 		algAsimetrico="RSA";
 	}
 
-	public void procesarCadena(InputStream in,OutputStream out,PrintWriter printer,BufferedReader reader) throws IOException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+	public void procesarCadena(InputStream in,OutputStream out,PrintWriter printer,BufferedReader reader) throws Exception{
 
 			printer.println("HOLA");
 			
@@ -59,9 +59,7 @@ public class Protocolo {
 			byte[] mybyte = cert.getEncoded();
 			out.write(mybyte);
 			out.flush();
-			if(reader.readLine().equals("ESTADO:OK")){
-				System.out.println("Se envio el certificado");
-			} else {
+			if(!reader.readLine().equals("ESTADO:OK")) {
 				throw new ProtocolException("No se pudo enviar el certificado");
 			}
 
@@ -72,18 +70,16 @@ public class Protocolo {
 			try{
 			byte[] certificado = new byte[1024];
 			in.read(certificado);
-			System.out.println("certificado recibido");
 			
 			X509Certificate certSer = (X509Certificate) CertificateFactory.getInstance("X.509")
 					.generateCertificate(new ByteArrayInputStream(certificado));
 			publicKeySer = certSer.getPublicKey();
             certSer.verify(publicKeySer);
-			System.out.println("certificado verificado");
 			
 			printer.println("ESTADO:OK");
 			} catch (Exception e) {
-				e.printStackTrace();
 				printer.println("ESTADO:ERROR");
+				throw e;
 			}
 			
 			Long t1=System.nanoTime();
@@ -95,7 +91,6 @@ public class Protocolo {
 			Cipher cipher = Cipher.getInstance(algAsimetrico);
 			cipher.init(Cipher.DECRYPT_MODE, certificado.getPrivada());
 			llaveSimetrica = cipher.doFinal(Hex.decode(div[1]));
-			System.out.println("Llave simétrica: " + Arrays.toString(llaveSimetrica));
 			
 			Cipher cipher1 = Cipher.getInstance(algSimetrico);
 			SecretKeySpec keySpec = new SecretKeySpec(llaveSimetrica, algSimetrico);
@@ -116,7 +111,6 @@ public class Protocolo {
 			mac.init(keySpec2);
 			byte[] parcial = mac.doFinal(posicion.getBytes());
 			String mandar= Hex.toHexString(cipher2.doFinal(parcial));
-			System.out.println("Yo enviando: " + mandar);
 			
 			printer.println("ACT2:"+mandar);
 			
