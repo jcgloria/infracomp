@@ -85,7 +85,8 @@ public class Protocolo {
 				e.printStackTrace();
 				printer.println("ESTADO:ERROR");
 			}
-
+			
+			Long t1=System.nanoTime();
 			String entrada = reader.readLine();
 			
 			if(!entrada.substring(6).equals("")){
@@ -99,7 +100,9 @@ public class Protocolo {
 			Cipher cipher1 = Cipher.getInstance(algSimetrico);
 			SecretKeySpec keySpec = new SecretKeySpec(llaveSimetrica, algSimetrico);
 			cipher1.init(Cipher.ENCRYPT_MODE, keySpec);
-
+			Long t2=System.nanoTime()-t1;
+			System.out.println("Cliente: " + this.hashCode() + " tiempo llave: " + t2);
+			
 			String posicion="41 24.2028, 2 10.4418";
 
 			printer.println("ACT1:"+Hex.toHexString(cipher1.doFinal((posicion).getBytes())));
