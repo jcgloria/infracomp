@@ -104,7 +104,8 @@ public class Protocolo {
 			System.out.println("Cliente: " + this.hashCode() + " tiempo llave: " + t2);
 			
 			String posicion="41 24.2028, 2 10.4418";
-
+			
+			Long t3=System.nanoTime();
 			printer.println("ACT1:"+Hex.toHexString(cipher1.doFinal((posicion).getBytes())));
 			
 			Cipher cipher2 = Cipher.getInstance(algAsimetrico);
@@ -119,14 +120,17 @@ public class Protocolo {
 			
 			printer.println("ACT2:"+mandar);
 			
-			if("ESTADO:OK".equals(reader.readLine())){
+			String estado=reader.readLine();
+			Long t4=System.nanoTime()-t3;
+			System.out.println("Cliente: " + this.hashCode() + " tiempo actualizacion: " + t4);
+			if("ESTADO:OK".equals(estado)){
 				System.out.println("Conexión terminada");
 			}
 			}else{
 				printer.println("ACT1");
 				printer.println("ACT2");
 				if("ESTADO:OK".equals(reader.readLine())){
-					System.out.println("Se acabo: Victoria!");
+					System.out.println("Conexión terminada");
 				}
 			}
 	}
